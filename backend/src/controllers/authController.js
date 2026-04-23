@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
+const { writeAuditLog } = require("../utils/auditLogger");
 
 const register = async (req, res) => {
   try {
@@ -18,6 +19,15 @@ const register = async (req, res) => {
     }
 
     const user = await User.create({ name, email, password });
+
+    await writeAuditLog({
+      user,
+      action: "REGISTER",
+      targetType: "AUTH",
+      targetId: user._id.toString(),
+      message: `${user.name} created an account`,
+    });
+
     res.status(201).json({
       message: "Account created successfully",
       user: { id: user._id, name: user.name, email: user.email },
@@ -41,6 +51,15 @@ const login = async (req, res) => {
     }
 
     const token = generateToken(user._id);
+
+    await writeAuditLog({
+      user,
+      action: "LOGIN",
+      targetType: "AUTH",
+      targetId: user._id.toString(),
+      message: `${user.name} signed in`,
+    });
+
     res.json({
       token,
       user: { id: user._id, name: user.name, email: user.email },

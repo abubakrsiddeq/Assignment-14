@@ -57,3 +57,13 @@ export const deleteProduct = (id) =>
     method: "DELETE",
     headers: getAuthHeaders(),
   }).then(handleResponse);
+
+// Activity logs
+export const fetchMyLogs = () =>
+  fetch(`${BASE_URL}/logs`, { headers: getAuthHeaders() }).then(handleResponse);
+
+export const clearMyLogs = () =>
+  fetch(`${BASE_URL}/logs`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  }).then(handleResponse);

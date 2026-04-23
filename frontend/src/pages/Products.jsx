@@ -1,19 +1,50 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { fetchProducts, deleteProduct } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import ActivityLogPanel from "../components/ActivityLogPanel";
+import ThemeToggle from "../components/ThemeToggle";
 
 const Products = () => {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialSearch = searchParams.get("q") || "";
+  const initialCategory = searchParams.get("category") || "All";
+  const rawSortField = searchParams.get("sort") || "createdAt";
+  const initialSortField = ["createdAt", "price", "stock"].includes(rawSortField) ? rawSortField : "createdAt";
+  const rawDirection = searchParams.get("dir") || "desc";
+  const initialSortDirection = ["asc", "desc"].includes(rawDirection) ? rawDirection : "desc";
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [sortBy, setSortBy] = useState("newest");
+  const [search, setSearch] = useState(initialSearch);
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory);
+  const [sortField, setSortField] = useState(initialSortField);
+  const [sortDirection, setSortDirection] = useState(initialSortDirection);
   const [brokenImages, setBrokenImages] = useState({});
+  const [showActivityLog, setShowActivityLog] = useState(false);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        setShowActivityLog(false);
+      }
+    };
+
+    if (showActivityLog) {
+      window.addEventListener("keydown", handleEsc);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [showActivityLog]);
 
   const loadProducts = async () => {
     try {
@@ -23,9 +54,11 @@ const Products = () => {
     } catch (err) {
       if (err.message.includes("expired") || err.message.includes("invalid") || err.message.includes("No token")) {
         logout();
+        showToast("Session expired. Please login again", "info");
         navigate("/login");
       } else {
         setError(err.message);
+        showToast(err.message, "error");
       }
     } finally {
       setLoading(false);
@@ -42,8 +75,10 @@ const Products = () => {
     try {
       await deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p._id !== id));
+      showToast("Product deleted", "success");
     } catch (err) {
       setError(err.message);
+      showToast(err.message, "error");
     } finally {
       setDeletingId(null);
     }
@@ -51,6 +86,7 @@ const Products = () => {
 
   const handleLogout = () => {
     logout();
+    showToast("Signed out successfully", "info");
     navigate("/login");
   };
 
@@ -69,16 +105,57 @@ const Products = () => {
     ),
   ];
 
+  useEffect(() => {
+    if (!categories.includes(categoryFilter)) {
+      setCategoryFilter("All");
+    }
+  }, [categories, categoryFilter]);
+
+  useEffect(() => {
+    const next = new URLSearchParams();
+
+    if (search.trim()) next.set("q", search.trim());
+    if (categoryFilter !== "All") next.set("category", categoryFilter);
+    if (sortField !== "createdAt") next.set("sort", sortField);
+    if (sortDirection !== "desc") next.set("dir", sortDirection);
+
+    setSearchParams(next, { replace: true });
+  }, [search, categoryFilter, sortField, sortDirection, setSearchParams]);
+
   const visibleProducts = filtered
     .filter((p) => {
       if (categoryFilter === "All") return true;
       return (p.category || "General") === categoryFilter;
     })
     .sort((a, b) => {
-      if (sortBy === "price") return Number(b.price || 0) - Number(a.price || 0);
-      if (sortBy === "stock") return Number(b.stock || 0) - Number(a.stock || 0);
-      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      const directionFactor = sortDirection === "asc" ? 1 : -1;
+
+      if (sortField === "price") {
+        return (Number(a.price || 0) - Number(b.price || 0)) * directionFactor;
+      }
+
+      if (sortField === "stock") {
+        return (Number(a.stock || 0) - Number(b.stock || 0)) * directionFactor;
+      }
+
+      return (new Date(a.createdAt || 0) - new Date(b.createdAt || 0)) * directionFactor;
     });
+
+  const directionOptions =
+    sortField === "price"
+      ? [
+          { value: "asc", label: "Low to High" },
+          { value: "desc", label: "High to Low" },
+        ]
+      : sortField === "stock"
+        ? [
+            { value: "asc", label: "Low to High" },
+            { value: "desc", label: "High to Low" },
+          ]
+        : [
+            { value: "desc", label: "Newest" },
+            { value: "asc", label: "Oldest" },
+          ];
 
   const lowStockCount = products.filter((p) => p.stock > 0 && p.stock < 5).length;
   const outOfStockCount = products.filter((p) => p.stock === 0).length;
@@ -101,6 +178,17 @@ const Products = () => {
         </div>
         <div className="dash-nav">
           <span className="user-greeting">Hi, {user?.name?.split(" ")[0]}</span>
+          <ThemeToggle />
+          <button
+            type="button"
+            className="btn-activity"
+            onClick={() => setShowActivityLog((prev) => !prev)}
+            aria-label="Toggle activity log"
+            aria-expanded={showActivityLog}
+          >
+            <span className="btn-activity-icon" aria-hidden="true">◷</span>
+            <span className="btn-activity-text">Activity</span>
+          </button>
           <button className="btn-logout" onClick={handleLogout}>
             Sign Out
           </button>
@@ -143,11 +231,33 @@ const Products = () => {
           </div>
           <div className="toolbar-controls">
             <div className="sort-control">
-              <label htmlFor="sortBy">Sort</label>
-              <select id="sortBy" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="newest">Newest</option>
+              <label htmlFor="sortField">Sort By</label>
+              <select
+                id="sortField"
+                value={sortField}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSortField(value);
+                  if (value === "createdAt") {
+                    setSortDirection("desc");
+                  }
+                }}
+              >
+                <option value="createdAt">Date</option>
                 <option value="price">Price</option>
                 <option value="stock">Stock</option>
+              </select>
+            </div>
+            <div className="sort-control">
+              <label htmlFor="sortDirection">Direction</label>
+              <select
+                id="sortDirection"
+                value={sortDirection}
+                onChange={(e) => setSortDirection(e.target.value)}
+              >
+                {directionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </select>
             </div>
             <div className="search-bar">
@@ -174,6 +284,20 @@ const Products = () => {
             </button>
           ))}
         </div>
+
+        {showActivityLog && (
+          <div className="activity-lightbox" onClick={() => setShowActivityLog(false)}>
+            <div
+              className="activity-lightbox-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Activity log"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ActivityLogPanel isOpen={showActivityLog} onClose={() => setShowActivityLog(false)} />
+            </div>
+          </div>
+        )}
 
         {error && <div className="alert alert-error">{error}</div>}
 

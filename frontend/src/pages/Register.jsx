@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../services/api";
+import { useToast } from "../context/ToastContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,19 +21,23 @@ const Register = () => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password) {
       setError("All fields are required");
+      showToast("All fields are required", "error");
       return;
     }
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters");
+      showToast("Password must be at least 6 characters", "error");
       return;
     }
     setLoading(true);
     try {
       await registerUser(form.name, form.email, form.password);
       setSuccess("Account created! Redirecting to login...");
+      showToast("Account created successfully", "success");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError(err.message);
+      showToast(err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -39,9 +46,12 @@ const Register = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-brand">
-          <div className="brand-icon">⬡</div>
-          <h1 className="brand-name">ProductVault</h1>
+        <div className="auth-head-row">
+          <div className="auth-brand">
+            <div className="brand-icon">⬡</div>
+            <h1 className="brand-name">ProductVault</h1>
+          </div>
+          <ThemeToggle />
         </div>
         <h2 className="auth-title">Create account</h2>
         <p className="auth-subtitle">Start managing your products today</p>

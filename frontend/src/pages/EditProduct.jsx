@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { fetchProductById, updateProduct } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 const CATEGORIES = ["Electronics", "Clothing", "Food & Drink", "Books", "Home & Garden", "Sports", "Toys", "Health", "Other"];
 
@@ -22,10 +24,13 @@ const EditProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { showToast } = useToast();
   const [form, setForm] = useState({ name: "", description: "", imageUrl: "", price: "", category: "", stock: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [previewError, setPreviewError] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,12 +44,15 @@ const EditProduct = () => {
           category: product.category || "",
           stock: product.stock ?? 0,
         });
+        setPreviewLoading(Boolean((product.imageUrl || "").trim()) && isValidImageUrl(product.imageUrl || ""));
       } catch (err) {
         if (err.message.includes("expired") || err.message.includes("invalid")) {
           logout();
+          showToast("Session expired. Please login again", "info");
           navigate("/login");
         } else {
           setError(err.message);
+          showToast(err.message, "error");
         }
       } finally {
         setFetching(false);
@@ -55,21 +63,31 @@ const EditProduct = () => {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === "imageUrl") {
+      setPreviewError(false);
+      const nextValue = e.target.value;
+      setPreviewLoading(Boolean(nextValue.trim()) && isValidImageUrl(nextValue));
+    }
     setError("");
   };
+
+  const canShowPreview = Boolean(form.imageUrl.trim()) && isValidImageUrl(form.imageUrl) && !previewError;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.price) {
       setError("Name and price are required");
+      showToast("Name and price are required", "error");
       return;
     }
     if (isNaN(form.price) || Number(form.price) < 0) {
       setError("Price must be a valid positive number");
+      showToast("Price must be a valid positive number", "error");
       return;
     }
     if (!isValidImageUrl(form.imageUrl)) {
       setError("Please enter a valid image URL (http/https)");
+      showToast("Please enter a valid image URL", "error");
       return;
     }
     setLoading(true);
@@ -82,13 +100,16 @@ const EditProduct = () => {
         category: form.category,
         stock: Number(form.stock) || 0,
       });
+      showToast("Product updated successfully", "success");
       navigate("/products");
     } catch (err) {
       if (err.message.includes("expired") || err.message.includes("invalid")) {
         logout();
+        showToast("Session expired. Please login again", "info");
         navigate("/login");
       } else {
         setError(err.message);
+        showToast(err.message, "error");
       }
     } finally {
       setLoading(false);
@@ -104,7 +125,10 @@ const EditProduct = () => {
             <span className="brand-name">ProductVault</span>
           </Link>
         </div>
-        <Link to="/products" className="btn-back">← Back to Products</Link>
+        <div className="dash-nav">
+          <ThemeToggle />
+          <Link to="/products" className="btn-back">← Back to Products</Link>
+        </div>
       </header>
 
       <main className="dash-main form-main">
@@ -162,6 +186,29 @@ const EditProduct = () => {
                   onChange={handleChange}
                   placeholder="https://images.unsplash.com/..."
                 />
+              </div>
+
+              <div className="image-preview-card" aria-live="polite">
+                <p className="image-preview-label">Live Image Preview</p>
+                <div className="image-preview-box">
+                  {canShowPreview ? (
+                    <>
+                      {previewLoading && <span className="preview-loader" aria-hidden="true" />}
+                      <img
+                        src={form.imageUrl}
+                        alt="Preview"
+                        className="image-preview"
+                        onLoad={() => setPreviewLoading(false)}
+                        onError={() => {
+                          setPreviewLoading(false);
+                          setPreviewError(true);
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <div className="image-preview-fallback">No valid preview available</div>
+                  )}
+                </div>
               </div>
 
               <div className="form-row">

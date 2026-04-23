@@ -4,6 +4,7 @@ const cors = require("cors");
 const connectDB = require("./src/config/db");
 const authRoutes = require("./src/routes/authRoutes");
 const productRoutes = require("./src/routes/productRoutes");
+const logRoutes = require("./src/routes/logRoutes");
 
 connectDB();
 
@@ -37,6 +38,7 @@ app.use(express.json());
 app.get("/", (req, res) => res.json({ message: "Product API is running", version: "1.0.0" }));
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
+app.use("/logs", logRoutes);
 
 app.use((req, res) => res.status(404).json({ message: "Route not found" }));
 app.use((err, req, res, next) => {

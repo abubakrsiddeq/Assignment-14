@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { fetchProductById } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 const ProductView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,10 +37,12 @@ const ProductView = () => {
       } catch (err) {
         if (err.message.includes("expired") || err.message.includes("invalid") || err.message.includes("No token")) {
           logout();
+          showToast("Session expired. Please login again", "info");
           navigate("/login");
           return;
         }
         setError(err.message);
+        showToast(err.message, "error");
       } finally {
         setLoading(false);
       }
@@ -55,7 +60,10 @@ const ProductView = () => {
             <span className="brand-name">ProductVault</span>
           </Link>
         </div>
-        <Link to="/products" className="btn-back">Back to Products</Link>
+        <div className="dash-nav">
+          <ThemeToggle />
+          <Link to="/products" className="btn-back">Back to Products</Link>
+        </div>
       </header>
 
       <main className="dash-main form-main">
