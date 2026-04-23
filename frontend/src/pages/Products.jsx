@@ -174,7 +174,7 @@ const Products = () => {
       <header className="dash-header">
         <div className="dash-brand">
           <span className="brand-icon">⬡</span>
-          <span className="brand-name">ProductVault</span>
+          <span className="brand-name">Assignment 14</span>
         </div>
         <div className="dash-nav">
           <span className="user-greeting">Hi, {user?.name?.split(" ")[0]}</span>
@@ -346,7 +346,7 @@ const Products = () => {
                     />
                   ) : (
                     <div className="product-image-fallback" aria-hidden="true">
-                      PV
+                      A14
                     </div>
                   )}
                 </div>

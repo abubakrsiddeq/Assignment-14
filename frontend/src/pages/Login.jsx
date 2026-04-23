@@ -48,7 +48,7 @@ const Login = () => {
         <div className="auth-head-row">
           <div className="auth-brand">
             <div className="brand-icon">⬡</div>
-            <h1 className="brand-name">ProductVault</h1>
+            <h1 className="brand-name">Assignment 14</h1>
           </div>
           <ThemeToggle />
         </div>

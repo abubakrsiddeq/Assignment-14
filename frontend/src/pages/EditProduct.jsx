@@ -122,7 +122,7 @@ const EditProduct = () => {
         <div className="dash-brand">
           <Link to="/products" className="brand-link">
             <span className="brand-icon">⬡</span>
-            <span className="brand-name">ProductVault</span>
+            <span className="brand-name">Assignment 14</span>
           </Link>
         </div>
         <div className="dash-nav">

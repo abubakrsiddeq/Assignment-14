@@ -122,24 +122,35 @@ a {
 }
 
 .brand-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, #0f766e, #109389);
+  background: linear-gradient(145deg, #0d9488, #0f766e);
   color: #fff;
-  font-size: 14px;
-  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.24);
+  font-size: 15px;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.38), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.brand-link:hover .brand-icon,
+.dash-brand:hover .brand-icon {
+  transform: scale(1.07);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
 .brand-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
   color: var(--text);
+  background: linear-gradient(135deg, var(--text) 60%, var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .auth-title {
@@ -581,21 +592,55 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 28px;
-  background: var(--header-bg, rgba(243, 246, 248, 0.88));
+  padding: 0 32px;
+  height: 66px;
+  background: var(--header-bg, rgba(243, 246, 248, 0.82));
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 var(--border), 0 4px 20px rgba(15, 118, 110, 0.05);
+  animation: header-enter 0.4s ease both;
+}
+
+.dash-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(13, 148, 136, 0.45) 40%, rgba(13, 148, 136, 0.45) 60%, transparent 100%);
+  pointer-events: none;
+}
+
+@keyframes header-enter {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dash-brand {
+  display: flex;
+  align-items: center;
 }
 
 .dash-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px 6px 14px;
+  backdrop-filter: blur(8px);
 }
 
 .user-greeting {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-muted);
+  padding-right: 6px;
+  border-right: 1px solid var(--border);
+  margin-right: 2px;
 }
 
 .dash-main {

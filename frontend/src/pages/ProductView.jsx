@@ -57,7 +57,7 @@ const ProductView = () => {
         <div className="dash-brand">
           <Link to="/products" className="brand-link">
             <span className="brand-icon">⬡</span>
-            <span className="brand-name">ProductVault</span>
+            <span className="brand-name">Assignment 14</span>
           </Link>
         </div>
         <div className="dash-nav">
@@ -91,7 +91,7 @@ const ProductView = () => {
                   onError={() => setImageFailed(true)}
                 />
               ) : (
-                <div className="detail-image-fallback" aria-hidden="true">PV</div>
+                <div className="detail-image-fallback" aria-hidden="true">A14</div>
               )}
             </div>
 
