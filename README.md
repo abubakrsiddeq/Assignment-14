@@ -43,7 +43,9 @@ project/
 cd backend
 npm install
 # Edit .env with your MongoDB URI and JWT secret
-npm run dev   # runs on http://localhost:5000
+npm run dev   # runs on http://localhost:5010
+# Optional: seed sample products for the existing user
+npm run seed
 ```
 
 ### Frontend
