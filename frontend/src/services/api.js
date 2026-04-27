@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "https://assignment14-backend.up.railway.app";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5010";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

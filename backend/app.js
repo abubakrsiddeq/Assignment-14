@@ -6,20 +6,19 @@ const authRoutes = require("./src/routes/authRoutes");
 const productRoutes = require("./src/routes/productRoutes");
 const logRoutes = require("./src/routes/logRoutes");
 
-connectDB();
-
 const app = express();
+
+const startServer = async () => {
+  await connectDB();
+};
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
-      "http://localhost:3000",
       "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-      "http://localhost:5176",
+      "http://localhost:5010",
     ];
 
     const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
@@ -46,5 +45,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal server error" });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+startServer()
+  .then(() => {
+    const PORT = process.env.PORT || 5010;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((error) => {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  });
